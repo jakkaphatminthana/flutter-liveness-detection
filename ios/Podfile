@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '15.5'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -29,6 +29,7 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
+  use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
@@ -39,5 +40,41 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    
+    # for ML Kit and Camera
+    target.build_configurations.each do |config|
+      # add preprocessor definitions
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'COCOAPODS=1',
+      ]
+      
+      # setting for ML Kit
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      
+      # protect bitcode issues
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # setting for camera and ML Kit
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      
+      # add Metal support for ML Kit
+      config.build_settings['MTL_ENABLE_DEBUG_INFO'] = 'INCLUDE_SOURCE'
+      
+      # memory management
+      config.build_settings['CLANG_ARC_MIGRATE_EMIT_ERRORS'] = 'YES'
+      
+      # add support for large binary
+      config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO' if config.name == 'Debug'
+    end
+    
+    # GoogleMLKit pods
+    if target.name.start_with?('GoogleMLKit') || target.name.start_with?('MLKit')
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['CLANG_WARN_STRICT_PROTOTYPES'] = 'NO'
+      end
+    end
   end
 end
