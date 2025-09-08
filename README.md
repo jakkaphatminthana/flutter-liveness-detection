@@ -1,16 +1,102 @@
-# flutter_liveness_detection
+# Flutter Liveness Detection
+Flutter app for real-time liveness detection using ML Kit Face Detection
 
-A new Flutter project.
+## 📱 Requirements
+- Flutter 3.0+
+- Android API 21+
+- iOS 15.5+
 
-## Getting Started
+## 🛠️ Tech Stack
+- Flutter – Cross-platform mobile framework
+- Google ML Kit – Face detection and recognition APIs
+- Camera Plugin – Real-time camera stream processing
+- Dart – Programming language for Flutter
+- Android/iOS Native – Platform-specific implementations
 
-This project is a starting point for a Flutter application.
+## 🚀 Setup
 
-A few resources to get you started if this is your first Flutter project:
+### 1. Android Configuration
+AndroidManifest.xml
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```xml
+<uses-permission android:name="android.permission.CAMERA"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+build.gradle
+
+```gradle
+dependencies {
+    implementation("com.google.mlkit:face-detection:16.1.7")
+}
+```
+
+### 2. iOS Configuration
+Info.plist
+
+```markdown
+<key>NSCameraUsageDescription</key>
+<string>The app needs access to the camera to take photos.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>The app needs access to the photo library to save and select photos.</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>The app needs permission to save photos to the photo library.</string>
+```
+
+Podfile
+
+```ruby
+platform :ios, '15.5'
+...
+use_modular_headers!
+...
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    
+    # for ML Kit and Camera
+    target.build_configurations.each do |config|
+      # add preprocessor definitions
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'COCOAPODS=1',
+      ]
+      
+      # setting for ML Kit
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      
+      # protect bitcode issues
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # setting for camera and ML Kit
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      
+      # add Metal support for ML Kit
+      config.build_settings['MTL_ENABLE_DEBUG_INFO'] = 'INCLUDE_SOURCE'
+      
+      # memory management
+      config.build_settings['CLANG_ARC_MIGRATE_EMIT_ERRORS'] = 'YES'
+      
+      # add support for large binary
+      config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO' if config.name == 'Debug'
+    end
+    
+    # GoogleMLKit pods
+    if target.name.start_with?('GoogleMLKit') || target.name.start_with?('MLKit')
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['CLANG_WARN_STRICT_PROTOTYPES'] = 'NO'
+      end
+    end
+  end
+end
+```
+
+## 📦 Usage
+```bash
+flutter pub get
+flutter run
+```
